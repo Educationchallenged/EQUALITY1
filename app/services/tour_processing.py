@@ -30,10 +30,12 @@ for folder in (UPLOAD_FOLDER, OUTPUT_FOLDER, TOURS_FOLDER):
 
 
 def slugify(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"[^\w\s-]", "", text)
-    text = re.sub(r"[\s_-]+", "-", text)
-    text = re.sub(r"^-+|-+$", "", text)
+    text = text[:200].lower()
+    text = re.sub(r"[^\w\s\-]", "", text)
+    text = text.replace("_", "-")
+    parts = text.split()
+    text = "-".join(parts)
+    text = text.strip("-")
     return text
 
 
