@@ -32,6 +32,30 @@ logger = logging.getLogger(__name__)
 tours_bp = Blueprint("tours", __name__)
 
 
+def _safe_tour_path(*segments: str) -> str:
+    """Build a path under TOURS_FOLDER and verify it doesn't escape via traversal.
+
+    Raises:
+        ValidationError: If any segment contains path traversal characters.
+    """
+    for seg in segments:
+        cleaned = secure_filename(seg)
+        if not cleaned or cleaned != seg:
+            raise ValidationError(
+                message="Invalid path segment.",
+                context={"segment": seg},
+            )
+
+    result = os.path.join(TOURS_FOLDER, *segments)
+    abs_result = os.path.realpath(result)
+    abs_base = os.path.realpath(TOURS_FOLDER)
+
+    if not abs_result.startswith(abs_base + os.sep) and abs_result != abs_base:
+        raise ValidationError(message="Invalid tour path.")
+
+    return result
+
+
 @tours_bp.route("/create-tour", methods=["POST"])
 def create_tour():
     """Handle multi-bucket media upload and kick off tour processing.
@@ -137,7 +161,7 @@ def create_tour():
 @tours_bp.route("/tour/<realtor>/<job_id>")
 def serve_tour(realtor: str, job_id: str):
     """Serve the Pannellum viewer page for a completed tour."""
-    tour_folder = os.path.join(TOURS_FOLDER, realtor, job_id)
+    tour_folder = _safe_tour_path(realtor, job_id)
     index_path = os.path.join(tour_folder, "index.html")
 
     if os.path.exists(index_path):
@@ -186,7 +210,7 @@ def serve_asset(realtor: str, job_id: str, filename: str):
     if not safe_name:
         raise ValidationError(message="Invalid filename.")
 
-    file_path = os.path.join(TOURS_FOLDER, realtor, job_id, safe_name)
+    file_path = _safe_tour_path(realtor, job_id, safe_name)
 
     if not os.path.exists(file_path):
         raise TourNotFoundError(
@@ -200,7 +224,7 @@ def serve_asset(realtor: str, job_id: str, filename: str):
 @tours_bp.route("/tour/<realtor>/<job_id>/status")
 def tour_status(realtor: str, job_id: str):
     """Check the processing status of a tour."""
-    tour_folder = os.path.join(TOURS_FOLDER, realtor, job_id)
+    tour_folder = _safe_tour_path(realtor, job_id)
     status_path = os.path.join(tour_folder, "status.json")
 
     if not os.path.exists(status_path):
