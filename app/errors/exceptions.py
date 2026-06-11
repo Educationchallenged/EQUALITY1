@@ -124,3 +124,42 @@ class DatabaseError(AppError):
     status_code = 503
     error_code = "DATABASE_ERROR"
     default_message = "A database error occurred. Please try again later."
+
+
+class StitchingError(AppError):
+    """Raised when panorama image stitching fails."""
+
+    status_code = 422
+    error_code = "STITCHING_ERROR"
+    default_message = "Failed to stitch images into a panorama."
+
+
+class VideoProcessingError(AppError):
+    """Raised when FFmpeg video generation fails."""
+
+    status_code = 422
+    error_code = "VIDEO_PROCESSING_ERROR"
+    default_message = "Failed to generate the tour video."
+
+
+class FileUploadError(AppError):
+    """Raised when file upload validation fails."""
+
+    status_code = 400
+    error_code = "FILE_UPLOAD_ERROR"
+    default_message = "File upload failed validation."
+
+
+class TourNotFoundError(NotFoundError):
+    """Raised when a requested tour does not exist."""
+
+    error_code = "TOUR_NOT_FOUND"
+    default_message = "The requested tour was not found."
+
+
+class TourProcessingError(AppError):
+    """Raised when background tour processing fails."""
+
+    status_code = 500
+    error_code = "TOUR_PROCESSING_ERROR"
+    default_message = "Tour processing encountered an error."

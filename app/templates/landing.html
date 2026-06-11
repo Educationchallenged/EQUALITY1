@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>360 House Videos | Cinematic Real Estate Tours</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@200;400;700&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-bright: #ffe082;
+      --dark: #000000;
+      --white: #ffffff;
+    }
+
+    body {
+      background: #000;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ─── SPLASH SCREEN ─── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.8s ease;
+    }
+
+    #splash::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+      opacity: 0.18;
+      pointer-events: none;
+      animation: grainShift 0.12s steps(1) infinite;
+      z-index: 1;
+    }
+
+    .beam {
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 0px solid transparent; border-right: 0px solid transparent;
+      border-top: 0px solid rgba(255,240,180,0.07);
+      filter: blur(18px);
+      animation: beamOpen 1.2s cubic-bezier(0.22,1,0.36,1) 0.2s forwards;
+      z-index: 2;
+    }
+
+    .spotlight {
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.04) 50%, transparent 75%);
+      opacity: 0;
+      animation: spotlightPulse 1s ease-out 0.8s forwards;
+      z-index: 2;
+    }
+
+    .logo-wrap {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: 
+        logoEntrance 1.2s cubic-bezier(0.34,1.56,0.64,1) 0.6s forwards,
+        logoBrighten 1.5s ease-in-out 1.8s forwards,
+        logoSpin 1.6s cubic-bezier(0.4,0,0.2,1) 2.0s forwards,
+        logoGlowPulse 1.2s ease-in-out 3.8s forwards,
+        logoFadeOut 1.2s cubic-bezier(0.76,0,0.24,1) 4.5s forwards;
+    }
+
+    .logo-img-ring {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 220px; height: 220px;
+    }
+
+    .logo-img-ring::before {
+      content: '';
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(201,168,76,0.25);
+      animation: ringRotate 8s linear infinite;
+    }
+
+    .logo-img-ring::after {
+      content: '';
+      position: absolute;
+      inset: -30px;
+      border-radius: 50%;
+      border: 0.8px solid rgba(201,168,76,0.10);
+      animation: ringRotate 12s linear infinite reverse;
+    }
+
+    .logo-img {
+      width: 200px; height: 200px;
+      object-fit: contain;
+      border-radius: 50%;
+      filter: brightness(0.3) contrast(1.1);
+      animation:
+        imgBrighten 1.5s ease-in-out 1.8s forwards,
+        imgGlowPeak 1.2s ease-in-out 3.8s forwards,
+        imgFadeBloom 1.2s ease-out 4.5s forwards;
+      z-index: 5;
+    }
+
+    .logo-bloom {
+      position: absolute;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,224,130,0.0) 30%, transparent 70%);
+      filter: blur(24px);
+      animation:
+        bloomGrow 1.5s ease-in-out 1.8s forwards,
+        bloomPeak 1.2s ease-in-out 3.8s forwards,
+        bloomFade 1.2s ease-out 4.5s forwards;
+      z-index: 4;
+    }
+
+    .brand-text {
+      text-align: center;
+      line-height: 1;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: 
+        textReveal 0.9s cubic-bezier(0.34,1.2,0.64,1) 1.6s forwards,
+        textFadeOut 1.0s ease-in 4.5s forwards;
+    }
+
+    .brand-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      letter-spacing: 0.25em;
+      color: var(--gold);
+      animation: 
+        titleGlow 1.5s ease-in-out 2.2s forwards,
+        titleGlowPeak 1.2s ease-in-out 3.8s forwards;
+    }
+
+    .brand-sub {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(0.6rem, 2vw, 0.78rem);
+      letter-spacing: 0.45em;
+      color: rgba(255,255,255,0.35);
+      margin-top: 8px;
+      text-transform: uppercase;
+      animation: subGlow 1.5s ease-in 2.5s forwards;
+    }
+
+    .film-strip { position: absolute; left: 0; right: 0; height: 44px; display: flex; gap: 4px; z-index: 3; opacity: 0; animation: stripReveal 0.6s ease 0.5s forwards; }
+    .film-strip.top { top: 0; }
+    .film-strip.bottom { bottom: 0; }
+    .film-hole { width: 24px; height: 18px; border-radius: 3px; background: #111; border: 1px solid #222; }
+    
+    .letterbox-top, .letterbox-bottom { position: absolute; left: 0; right: 0; height: 52px; background: #000; z-index: 3; }
+    .letterbox-top { top: 0; } .letterbox-bottom { bottom: 0; }
+
+    .flash-overlay {
+      position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 20; pointer-events: none;
+      animation: projectorFlash 0.5s ease-in-out 4.4s forwards;
+    }
+
+    .lens-flare {
+      position: absolute; top: 50%; left: 0; right: 0; height: 2px; transform: translateY(-50%);
+      background: linear-gradient(90deg, transparent 0%, rgba(255,240,180,0.55) 50%, transparent 100%);
+      opacity: 0; filter: blur(1px); z-index: 8;
+      animation: lensFlare 0.8s ease-in-out 4.3s forwards;
+    }
+
+    @keyframes grainShift { 0% { transform: translate(0,0); } 25% { transform: translate(-3%,-2%); } 50% { transform: translate(2%,3%); } 100% { transform: translate(0,0); } }
+    @keyframes beamOpen { 0% { border-top-width: 0px; opacity:0; } 100% { border-left-width: 280px; border-right-width: 280px; border-top-width: 700px; opacity: 0.85; } }
+    @keyframes spotlightPulse { 0% { opacity:0; transform: scale(0.4); } 100% { opacity:1; transform: scale(1); } }
+    @keyframes logoEntrance { 0% { opacity:0; transform: scale(0.4) translateY(30px); } 100% { opacity:1; transform: scale(1) translateY(0); } }
+    @keyframes logoSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes logoBrighten { 0% { filter: brightness(0.3); } 100% { filter: brightness(1) drop-shadow(0 0 40px rgba(201,168,76,0.6)); } }
+    @keyframes logoGlowPulse { 0% { filter: brightness(1); } 50% { filter: brightness(1.5) drop-shadow(0 0 80px rgba(255,224,130,1)); } 100% { filter: brightness(1.2); } }
+    @keyframes logoFadeOut { 0% { opacity:1; filter: blur(0); } 100% { opacity:0; filter: blur(20px); transform: scale(1.3); } }
+    @keyframes projectorFlash { 0% { opacity:0; } 50% { opacity:1; } 100% { opacity:0; } }
+    @keyframes textReveal { 0% { opacity:0; transform: translateY(12px); } 100% { opacity:1; transform: translateY(0); } }
+    @keyframes textFadeOut { 0% { opacity:1; } 100% { opacity:0; } }
+    @keyframes ringRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes imgBrighten { 0% { filter: brightness(0.3); } 100% { filter: brightness(1); } }
+    @keyframes imgFadeBloom { 0% { opacity:1; filter: brightness(1.15); } 100% { opacity:0; filter: brightness(6) blur(20px); } }
+    @keyframes bloomGrow { 0% { opacity:0; } 100% { opacity:0.35; } }
+    @keyframes bloomFade { 0% { opacity:1; } 100% { opacity:0; transform: scale(2.5); } }
+    @keyframes stripReveal { 0% { opacity:0; } 100% { opacity:1; } }
+    @keyframes lensFlare { 0% { opacity:0; transform: translateY(-50%) scaleX(0.2); } 50% { opacity:1; } 100% { opacity:0; transform: translateY(-50%) scaleX(1.5); } }
+    @keyframes titleGlow { 0% { text-shadow: 0 0 0px transparent; } 100% { text-shadow: 0 0 20px rgba(201,168,76,0.5); } }
+    @keyframes titleGlowPeak { 0% { color: var(--gold); } 50% { color: #ffe082; text-shadow: 0 0 40px rgba(255,224,130,1); } 100% { color: var(--gold); } }
+    @keyframes subGlow { 0% { opacity:0; } 100% { opacity:1; } }
+
+    /* Main Site Styles */
+    .glass-card {
+      background: rgba(10, 10, 10, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(201, 168, 76, 0.2);
+      border-radius: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(201, 168, 76, 0.5);
+      box-shadow: 0 0 30px rgba(201, 168, 76, 0.1);
+    }
+
+    .pricing-card {
+      background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.95) 100%);
+      border: 1px solid rgba(201,168,76,0.3);
+      transition: transform 0.2s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(201,168,76,0.6);
+    }
+
+    .cta-button {
+      background: linear-gradient(90deg, #b91c1c 0%, #dc2626 100%);
+      transition: all 0.2s ease;
+    }
+
+    .cta-button:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 30px rgba(220, 38, 38, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="letterbox-top"></div>
+  <div class="letterbox-bottom"></div>
+  <div class="film-strip top" id="filmTop"></div>
+  <div class="film-strip bottom" id="filmBottom"></div>
+  <div class="beam"></div>
+  <div class="spotlight"></div>
+  <div class="lens-flare"></div>
+  <div class="flash-overlay"></div>
+
+  <div class="logo-wrap">
+    <div class="logo-img-ring">
+      <div class="logo-bloom"></div>
+      <img class="logo-img" src="logo.png" alt="360 House Videos Logo" onerror="this.src='https://placehold.co/200x200/c9a84c/1a1a1a?text=360'"/>
+    </div>
+    <div class="brand-text">
+      <div class="brand-title">360 HOUSE VIDEOS</div>
+      <div class="brand-sub">Visual Cinematic Tours</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN SITE CONTENT -->
+<div id="site" class="opacity-0 scale-95 transition-all duration-1000 ease-out">
+  
+  <!-- Navigation Bar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 py-4 px-6 glass-card rounded-none border-t-0 border-x-0">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <img src="logo.png" alt="Logo" class="h-10 md:h-12 w-auto" onerror="this.src='https://placehold.co/80x80/c9a84c/1a1a1a?text=360'"/>
+
+      <div class="hidden md:flex gap-6 text-white/70 font-semibold text-sm uppercase tracking-wide">
+        <a href="#pricing" class="hover:text-[#c9a84c] transition">Pricing</a>
+        <a href="#trial" class="hover:text-[#c9a84c] transition">$5 Trial</a>
+        <a href="#member" class="hover:text-[#c9a84c] transition">Membership</a>
+        <a href="/login" class="hover:text-[#c9a84c] transition">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="min-h-screen flex flex-col items-center justify-center text-center px-4 pt-24 pb-12 bg-[#0a0a0a]">
+    <div class="max-w-6xl mx-auto w-full">
+      <h1 class="text-3xl md:text-5xl font-bold tracking-tighter mb-4 text-white">
+       Visual Tours for <span class="text-[#c9a84c]">Every Listing</span>
+      </h1>
+      <p class="text-lg md:text-2xl text-zinc-300 mb-8 max-w-3xl mx-auto">
+        Save time and money with drag-at-your-convenience tours. Serious buyers only.
+      </p>
+<!-- SPLIT SCREEN PLAYERS -->
+<div class="flex flex-row gap-3 mt-6" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+
+    <!-- LEFT SIDE: TWO SLIDESHOWS -->
+    <div style="width: 48%; display: flex; flex-direction: column; gap: 8px;">
+
+        <!-- Exterior Slideshow -->
+        <div style="height: 100px; border-radius: 8px; overflow: hidden; background: #111;">
+            <img src="/exterior1.jpg" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="/exterior2.jpg" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <img src="/exterior3.jpg" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+        </div>
+
+        <!-- Interior Slideshow -->
+        <div style="height: 100px; border-radius: 8px; overflow: hidden; background: #111;">
+            <img src="/interior1.jpg" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="/interior2.jpg" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <img src="/interior3.jpg" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE: 360° PLAYER -->
+    <div style="width: 48%; height: 208px; border-radius: 8px; overflow: hidden; background: #111;">
+        <div id="panorama-viewer" style="width: 100%; height: 100%;"></div>
+    </div>
+</div>   
+ 
+    <div class="flex flex-col sm:flex-row gap-5 justify-center mb-12">
+        <a href="#trial" class="cta-button text-white font-bold text-xl px-8 py-4 rounded-full">$5 Trial →</a>
+        <a href="#pricing" class="border-2 border-white/30 hover:border-[#c9a84c] text-white font-semibold px-8 py-4 rounded-full">View Pricing</a>
+      </div>
+      <p class="text-sm text-zinc-500">No hidden fees. We don't sell your leads.</p>
+    </div>
+  </section>
+
+  <!-- PRICING SECTION -->
+  <section id="pricing" class="py-24 px-6 max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Simple, <span class="text-[#c9a84c]">Transparent Pricing</span></h2>
+      <div class="w-24 h-[2px] bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent mx-auto"></div>
+      <p class="text-gray-400 mt-6 max-w-2xl mx-auto">One-time membership. No recurring fees except hosting.</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Trial Card -->
+      <div class="pricing-card rounded-2xl p-8 text-center">
+        <div class="text-[#c9a84c] text-sm font-bold tracking-wider mb-2">GET STARTED</div>
+        <div class="text-5xl font-bold text-white mb-2">$5</div>
+        <div class="text-gray-400 text-sm mb-6">One-time</div>
+        <ul class="text-left text-gray-300 space-y-3 mb-8">
+          <li class="flex items-center gap-2">✓ One video (interior OR exterior)</li>
+          <li class="flex items-center gap-2">✓ Raw OR overlay (your choice)</li>
+          <li class="flex items-center gap-2">✓ Download link emailed to you</li>
+          <li class="flex items-center gap-2 text-gray-500">✗ No hosted player</li>
+        </ul>
+        <a href="#trial" class="block bg-[#c9a84c]/20 hover:bg-[#c9a84c]/30 text-[#c9a84c] font-bold py-3 rounded-xl">Try $5 Trial</a>
+      </div>
+
+      <!-- Membership Card -->
+      <div class="pricing-card rounded-2xl p-8 text-center border-[#c9a84c] relative">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#c9a84c] text-black text-xs font-bold px-3 py-1 rounded-full">BEST VALUE</div>
+        <div class="text-5xl font-bold text-white mb-2">$100</div>
+        <div class="text-gray-400 text-sm mb-6">Lifetime Membership</div>
+        <ul class="text-left text-gray-300 space-y-3 mb-8">
+          <li class="flex items-center gap-2">✓ Access to members area</li>
+          <li class="flex items-center gap-2">✓ Add hosting ($25/mo)</li>
+          <li class="flex items-center gap-2">✓ Buy videos ($7 each)</li>
+          <li class="flex items-center gap-2">✓ Up to 25 active listings</li>
+          <li class="flex items-center gap-2">⭐ Career tracking (coming soon)</li>
+        </ul>
+        <a href="/membership-checkout" class="block bg-[#c9a84c] hover:bg-[#b8932a] text-black font-bold py-3 rounded-xl">Become a Member</a>
+      </div>
+
+      <!-- Hosting Card -->
+      <div class="pricing-card rounded-2xl p-8 text-center">
+        <div class="text-[#c9a84c] text-sm font-bold tracking-wider mb-2">ADD-ON</div>
+        <div class="text-5xl font-bold text-white mb-2">$25</div>
+        <div class="text-gray-400 text-sm mb-6">per month</div>
+        <ul class="text-left text-gray-300 space-y-3 mb-8">
+          <li class="flex items-center gap-2">✓ Hosted player URL per listing</li>
+          <li class="flex items-center gap-2">✓ Full 360° pan and drag</li>
+          <li class="flex items-center gap-2">✓ Hotspot transition</li>
+          <li class="flex items-center gap-2">✓ Realtor overlay + MLS data</li>
+        </ul>
+        <div class="text-gray-500 text-sm">Requires Membership ($100)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRIAL SECTION -->
+  <section id="trial" class="py-24 px-6 max-w-3xl mx-auto">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">$5 Trial</h2>
+      <p class="text-gray-400">Upload 16 photos. Choose interior or exterior. Raw or overlay.</p>
+    </div>
+
+    <div class="glass-card p-8">
+      <form id="trial-form">
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <input type="email" id="trial-email" placeholder="Your Email" required class="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white">
+          <input type="text" id="trial-address" placeholder="Property Address" required class="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white">
+          <select id="trial-type" class="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white">
+            <option value="interior">Interior</option>
+            <option value="exterior">Exterior</option>
+          </select>
+          <select id="trial-overlay" class="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white">
+            <option value="raw">Raw (no logo)</option>
+            <option value="overlay">Overlay (with logo)</option>
+          </select>
+        </div>
+
+        <div id="trial-dropzone" class="border-2 border-dashed border-white/20 rounded-xl p-8 text-center cursor-pointer hover:border-[#c9a84c] transition mb-4">
+          <svg class="w-12 h-12 mx-auto text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p class="text-gray-400">Click or drag 16 photos here</p>
+        </div>
+        <input type="file" id="trial-files" class="hidden" multiple accept="image/*">
+        <div id="trial-file-list" class="text-sm text-gray-400 mb-4"></div>
+
+        <button type="submit" id="trial-submit" class="w-full cta-button text-white font-bold py-4 rounded-xl disabled:opacity-50" disabled>
+          Pay $5 & Create Tour
+        </button>
+      </form>
+      <div id="trial-status" class="mt-4 text-center hidden"></div>
+    </div>
+  </section>
+
+  <!-- MEMBERSHIP CTA -->
+  <section id="member" class="py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center glass-card p-12">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Ready to elevate your listings?</h2>
+      <p class="text-gray-300 text-lg mb-6">Join as a member ($100 one-time) then add hosting ($25/mo).</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/membership-checkout" class="bg-[#c9a84c] hover:bg-[#b8932a] text-black font-bold px-8 py-3 rounded-full">Become a Member →</a>
+        <a href="/login" class="border border-white/30 hover:border-[#c9a84c] text-white px-8 py-3 rounded-full">Member Login</a>
+      </div>
+      <p class="text-gray-500 text-xs mt-6">⭐ Coming soon: Career tracking — annual videos of houses sold</p>
+    </div>
+  </section>
+
+  <footer class="py-8 text-center text-gray-500 text-sm border-t border-white/5">
+    <p>© 2025 360 House Videos — Cinematic Real Estate Media</p>
+    <p class="text-xs mt-2">No hidden fees. We don't sell your leads.</p>
+  </footer>
+</div>
+
+<script>
+  // Splash transition
+  const splash = document.getElementById('splash');
+  const site = document.getElementById('site');
+
+  setTimeout(() => {
+    if (splash) {
+      splash.style.opacity = '0';
+      splash.style.pointerEvents = 'none';
+    }
+    if (site) {
+      site.classList.remove('opacity-0', 'scale-95');
+      site.classList.add('opacity-100', 'scale-100');
+    }
+    document.body.style.overflow = 'auto';
+    setTimeout(() => { if (splash) splash.style.display = 'none'; }, 800);
+  }, 4800);
+
+  // Film strips
+  const topStrip = document.getElementById('filmTop');
+  const bottomStrip = document.getElementById('filmBottom');
+  if (topStrip && bottomStrip) {
+    for (let i = 0; i < 30; i++) {
+      topStrip.innerHTML += '<div class="film-hole"></div>';
+      bottomStrip.innerHTML += '<div class="film-hole"></div>';
+    }
+  }
+
+  // Trial upload
+  const dropzone = document.getElementById('trial-dropzone');
+  const fileInput = document.getElementById('trial-files');
+  const fileListDiv = document.getElementById('trial-file-list');
+  const submitBtn = document.getElementById('trial-submit');
+  const trialForm = document.getElementById('trial-form');
+
+  let selectedFiles = [];
+
+  dropzone.onclick = () => fileInput.click();
+  dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('border-[#c9a84c]'); };
+  dropzone.ondragleave = () => dropzone.classList.remove('border-[#c9a84c]');
+  dropzone.ondrop = (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('border-[#c9a84c]');
+    addFiles(Array.from(e.dataTransfer.files));
+  };
+  fileInput.onchange = (e) => addFiles(Array.from(e.target.files));
+
+  function addFiles(files) {
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+    selectedFiles.push(...imageFiles);
+    updateFileList();
+  }
+
+  function updateFileList() {
+    if (selectedFiles.length === 0) {
+      fileListDiv.innerHTML = '';
+      submitBtn.disabled = true;
+      return;
+    }
+    fileListDiv.innerHTML = selectedFiles.length + ' photos selected (16 recommended)';
+    submitBtn.disabled = selectedFiles.length < 4;
+  }
+
+  trialForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('trial-email').value;
+    const address = document.getElementById('trial-address').value;
+    const tourType = document.getElementById('trial-type').value;
+    const overlayType = document.getElementById('trial-overlay').value;
+
+    if (!email || !address) {
+      alert('Please enter email and address');
+      return;
+    }
+
+    if (selectedFiles.length < 4) {
+      alert('Please upload at least 4 photos');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing payment...';
+    document.getElementById('trial-status').innerHTML = '<div class="text-gray-400 mt-4">Redirecting to Stripe...</div>';
+    document.getElementById('trial-status').classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/trial/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, address, tourType, overlayType, photoCount: selectedFiles.length })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL');
+      }
+    } catch (err) {
+      document.getElementById('trial-status').innerHTML = '<div class="text-red-400 text-center">Error: ' + err.message + '</div>';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Pay $5 & Create Tour';
+    }
+  };
+</script>
+
+</body>
+</html>
